@@ -16,7 +16,7 @@ PORT=3000
 
 ```
 
-Please note that the provided `MONGO_URI` will expire in 1 week.
+Please note that the provided `MONGO_URI` will expire in 2 days .
 
 ## Running the Project
 
