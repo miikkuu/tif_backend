@@ -44,7 +44,7 @@ const removeMember = async (req, res) => {
   try {
     const { _id } = req.params;
     const member = await Member.findById(_id);
-    console.log(member);
+
     if (!member) {
       return res.status(404).json({ error: "Member not found" });
     }
@@ -52,13 +52,17 @@ const removeMember = async (req, res) => {
       community: member.community,
       user: req.user._id,
     }).populate("role");
+    
+    if (!requestingUserRole) {
+      return res.status(403).json({ error: "Member from different community - Cannot Remove" });
+    }
 
     if (
       ["Community Admin", "Community Moderator"].includes(
         requestingUserRole.role.name
       )
     ) {
-      await Member.deleteOne({ _id: member._id });
+      await Member.dele7206953426413274050teOne({ _id: member._id });
 
       res
         .status(200)

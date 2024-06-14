@@ -6,10 +6,7 @@ const slugify = require("slugify");
 
 const createCommunity = async (req, res) => {
   try {
-    const { name } = req.body;
-    if (!name) {
-      return res.status(400).json({ error: "Name is required" });
-    }
+    const { name } = req.body; // Trust validation middleware
 
     const slug = slugify(name, { lower: true });
 
@@ -20,22 +17,16 @@ const createCommunity = async (req, res) => {
         .json({ error: "A community with this name already exists" });
     }
 
-    let community;
-    try {
-      community = new Community({
-        _id: Snowflake.generate(),
-        name,
-        slug,
-        owner: req.user._id,
-        created_at: new Date(),
-        updated_at: new Date(),
-      });
+    const community = new Community({
+      _id: Snowflake.generate(),
+      name,
+      slug,
+      owner: req.user._id,
+      created_at: new Date(),
+      updated_at: new Date(),
+    });
 
-      await community.save();
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: "Internal server error" });
-    }
+    await community.save();
 
     let adminRole = await Role.findOne({ name: "Community Admin" });
     if (!adminRole) {
@@ -44,7 +35,6 @@ const createCommunity = async (req, res) => {
         name: "Community Admin",
       });
     }
-    
 
     const member = new Member({
       _id: Snowflake.generate(),
@@ -69,18 +59,18 @@ const createCommunity = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" }); 
   }
 };
-
 const getAllCommunities = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10 } = req.query; 
 
     const communities = await Community.find()
       .populate("owner", "_id name")
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
+      .limit(limit) 
+      .skip((page - 1) * limit) 
       .exec();
 
     const count = await Community.countDocuments();
@@ -108,7 +98,7 @@ const getAllCommunities = async (req, res) => {
       },
     });
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error" }); // Consider more specific errors
   }
 };
 
@@ -117,20 +107,19 @@ const getCommunityMembers = async (req, res) => {
     const { page = 1, limit = 10 } = req.query;
     const { _id } = req.params; // _id here is actually the community name
 
-    const community = await Community.findOne({ slug : _id });
+    const community = await Community.findOne({ slug: _id });
     if (!community) {
       return res.status(404).json({ error: "Community not found" });
     }
-
 
     const members = await Member.find({ community: community._id })
       .select("-__v")
       .populate("user", "_id name")
       .populate("role", "_id name")
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
+      .limit(limit) 
+      .skip((page - 1) * limit) 
       .exec();
-    console.log(members);
+
     const count = await Member.countDocuments({ community: community._id });
 
     res.status(200).json({
@@ -143,30 +132,32 @@ const getCommunityMembers = async (req, res) => {
         data: members,
       },
     });
-    
   } catch (error) {
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error" }); 
   }
 };
 
 const getOwnedCommunities = async (req, res) => {
   try {
-    const { page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10 } = req.query
+
     const communities = await Community.find({ owner: req.user._id })
       .select("-__v")
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
+      .limit(limit) 
+      .skip((page - 1) * limit) 
       .exec();
+
     const count = await Community.countDocuments({ owner: req.user._id });
+
     res.status(200).json({
       status: true,
       content: {
-      meta: {
-        total: count,
-        pages: Math.ceil(count / limit),
-        page: parseInt(page),
-      },
-      data: communities,
+        meta: {
+          total: count,
+          pages: Math.ceil(count / limit),
+          page: parseInt(page),
+        },
+        data: communities,
       },
     });
   } catch (error) {
@@ -177,26 +168,26 @@ const getOwnedCommunities = async (req, res) => {
 const getJoinedCommunities = async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query; 
+
     const members = await Member.find({ user: req.user._id })
       .select("-__v")
-      .populate("community")
-      .limit(limit * 1)
-      .skip((page - 1) * limit)
+      .populate("community") // Populate community details
+      .limit(limit) 
+      .skip((page - 1) * limit) 
       .exec();
-      console.log(members);
 
     const count = await Member.countDocuments({ user: req.user._id });
-    const communities = members.map((member) => member.community);
+    const communities = members.map((member) => member.community); // Extract communities
 
     res.status(200).json({
       status: true,
       content: {
-      meta: {
-        total: count,
-        pages: Math.ceil(count / limit),
-        page: parseInt(page),
-      },
-      data: communities,
+        meta: {
+          total: count,
+          pages: Math.ceil(count / limit),
+          page: parseInt(page),
+        },
+        data: communities,
       },
     });
   } catch (error) {
