@@ -10,13 +10,12 @@ To run this project, you will need to add the following environment variables to
 ```
 JWT_SECRET=randomjwtsecret
 
-MONGO_URI=mongodb+srv://itsmeyashrajofficial:sho5lDnj0oOzWMS6@tif-db.k6u7bir.mongodb.net/?retryWrites=true&w=majority&appName=tif-db
+MONGO_URI=your-mongo-db-url
 
 PORT=3000
 
 ```
 
-Please note that the provided `MONGO_URI` will expire in 2 days .
 
 ## Running the Project
 
